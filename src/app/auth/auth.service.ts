@@ -1,7 +1,7 @@
 import { Injectable } from "@angular/core";
 import { HttpClient, HttpErrorResponse } from "@angular/common/http";
 import { catchError, tap } from "rxjs/operators";
-import { throwError, Subject } from "rxjs";
+import { throwError, BehaviorSubject } from "rxjs";
 
 import { User } from "./user.model";
 
@@ -18,7 +18,10 @@ export interface AuthResponseData {
 export class AuthService {
     constructor(private http: HttpClient) {}
 
-    user = new Subject<User>();
+    // BehaviorSubject is same as Subject of rxjs/operators with additional features. 
+    // It gives the access of previous emmites.
+    // In short here it will provide use the user data which we have saved while login api call.
+    user = new BehaviorSubject<User>(null);
 
     signup(email: string, password: string) {
         return this.http.post<AuthResponseData>(
