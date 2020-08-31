@@ -4,6 +4,7 @@ import { catchError, tap } from "rxjs/operators";
 import { throwError, BehaviorSubject } from "rxjs";
 
 import { User } from "./user.model";
+import { Router } from "@angular/router";
 
 export interface AuthResponseData {
     idToken: string,
@@ -16,7 +17,7 @@ export interface AuthResponseData {
 
 @Injectable({providedIn: 'root' })
 export class AuthService {
-    constructor(private http: HttpClient) {}
+    constructor(private http: HttpClient, private router: Router) {}
 
     // BehaviorSubject is same as Subject of rxjs/operators with additional features. 
     // It gives the access of previous emmites.
@@ -57,6 +58,11 @@ export class AuthService {
                 }
             )
         );
+    }
+
+    logout() {
+        this.user.next(null);
+        this.router.navigate(['/auth']);
     }
 
     private handleAuthentication(email: string, userId: string, token: string, expiresIn: number) {
