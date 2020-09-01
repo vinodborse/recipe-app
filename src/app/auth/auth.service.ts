@@ -24,6 +24,8 @@ export class AuthService {
     // In short here it will provide use the user data which we have saved while login api call.
     user = new BehaviorSubject<User>(null);
 
+    private tokenExpirationTime: any;
+
     signup(email: string, password: string) {
         return this.http.post<AuthResponseData>(
             'https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=AIzaSyD0tll1mpzfEafIQYQfL5ZoDWRrZSC0IeQ', 
@@ -63,6 +65,12 @@ export class AuthService {
     logout() {
         this.user.next(null);
         this.router.navigate(['/auth']);
+        localStorage.removeItem('userData');
+
+        if (this.tokenExpirationTime) {
+            clearTimeout(this.tokenExpirationTime);
+        }
+        this.tokenExpirationTime = null;
     }
 
     autoLogin() {
@@ -75,13 +83,22 @@ export class AuthService {
 
         if (loadedUser.token) {
             this.user.next(loadedUser);
+            const expirationDurationTime = new Date(user._tokenExpirationDate).getTime() - new Date().getTime();
+            this.autoLogout(expirationDurationTime);
         }
     }
 
+    autoLogout(expirationTime: number) {
+        this.tokenExpirationTime = setTimeout(() => {
+            this.logout();
+        }, expirationTime);
+    }
+
     private handleAuthentication(email: string, userId: string, token: string, expiresIn: number) {
-        const expirationDate = new Date(new Date().getTime() + expiresIn *1000);
+        const expirationDate = new Date(new Date().getTime() + expiresIn * 1000);
         const userData = new User(email, userId, token, expirationDate);
         this.user.next(userData);
+        this.autoLogout(expiresIn * 1000);
         localStorage.setItem('userData', JSON.stringify(userData));
     }
 
